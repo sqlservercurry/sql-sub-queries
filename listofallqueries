@@ -1,0 +1,90 @@
+/* Author: Pravin Dabade
+Website: www.sqlservercurry.com */
+USE Northwind
+GO
+
+SELECT * FROM Customers
+SELECT * FROM Orders
+SELECT * FROM [Order Details]
+SELECT * FROM Employees
+SELECT * FROM Categories
+SELECT * FROM Products
+SELECT * FROM Suppliers
+
+--SELECT ALL THE ORDERS PLACED BY CUSTOMER WHOSE Phone No IS  030-0074321
+SELECT * FROM Orders WHERE CustomerID=
+(SELECT CustomerID FROM Customers
+ WHERE Phone='030-0074321')
+
+--SELECT ALL THE PRODUCTS which belongs to Seafood category
+SELECT * FROM Products WHERE CategoryID=
+(SELECT CategoryID FROM Categories 
+WHERE CategoryName='Seafood')
+
+--Select all the Products which are supplied by company 'Pavlova, Ltd.'
+SELECT * FROM Products WHERE SupplierID=
+(SELECT SupplierID FROM Suppliers 
+WHERE CompanyName='Pavlova, Ltd.')
+
+------Error - Sub Query Returns More than one Row.
+SELECT * FROM Orders WHERE CustomerID =
+(SELECT CustomerID FROM Customers 
+WHERE City='London')
+-----------------------------------------------------------
+--When Sub Query returns more than one row, you can make use of special operators. Special Operator - IN, NOT IN, ANY, ALL, EXISTS
+
+--IN Operator - Inner Query returns list of values which will be used by outer query to fetch the matching rows.
+SELECT * FROM Orders WHERE CustomerID IN(
+SELECT CustomerID FROM Customers WHERE City='London')
+--NOT IN Operator - Inner Query returns list of values. The outer query to fetch the non-matching rows.
+SELECT * FROM Orders WHERE CustomerID NOT IN(
+SELECT CustomerID FROM Customers WHERE City='London')
+
+-->ANY/SOME Operator - Compares the list of values and returns the rows greater than the min value.
+SELECT * FROM Products WHERE UnitPrice>ANY(
+SELECT MAX(UnitPrice) FROM Products GROUP BY CategoryID)
+
+SELECT * FROM Products WHERE UnitPrice>SOME(
+SELECT MAX(UnitPrice) FROM Products GROUP BY CategoryID)
+
+--<ANY/SOME Operator - Compares the list of values and returns the rows less than the max value.
+SELECT * FROM Products WHERE UnitPrice<ANY(
+SELECT MAX(UnitPrice) FROM Products GROUP BY CategoryID)
+
+SELECT * FROM Products WHERE UnitPrice<SOME(
+SELECT MAX(UnitPrice) FROM Products GROUP BY CategoryID)
+
+-->ALL Operator - Compares the list of values and returns the rows greater than the max value.
+SELECT * FROM Products WHERE UnitPrice>ALL(
+SELECT MAX(UnitPrice) FROM Products 
+GROUP BY CategoryID)
+
+SELECT * FROM Products WHERE UnitPrice>=ALL(
+SELECT MAX(UnitPrice) FROM Products 
+GROUP BY CategoryID)
+--<ALL Operator - Compares the list of values and returns the rows less than the min value.
+SELECT * FROM Products WHERE UnitPrice<ALL(
+SELECT MAX(UnitPrice) FROM Products GROUP BY CategoryID)
+
+--EXISTS/ NOT EXISTS Operator
+SELECT * FROM Customers WHERE EXISTS(
+SELECT COUNT(*) FROM Orders 
+WHERE ShipCity='London' GROUP BY ShipCity 
+HAVING COUNT(*)>30)
+
+--Co-Related Sub Query
+SELECT * FROM Orders O WHERE EmployeeID IN(
+SELECT EmployeeID FROM Employees E 
+WHERE O.ShipCity=E.City)
+
+--Nested Sub Queries with Multi-Levels
+SELECT * FROM Orders WHERE OrderID IN(
+SELECT OrderID FROM [Order Details] WHERE ProductID=(
+SELECT ProductID FROM Products WHERE ProductName='Chai'))
+
+--DELETE Statement USING Sub Query
+DELETE FROM Customers WHERE City IN(
+SELECT ShipCity FROM Orders WHERE ShipCountry='France')
+
+UPDATE Products SET Discontinued=0 WHERE SupplierID=(
+SELECT SupplierID FROM Suppliers WHERE City='London') 
